@@ -64,48 +64,48 @@ Your Phone (React Native app)  →  Supabase (always online, hosted by them)
 - [ ] 2.6 Set bucket to private (only accessible via the app)
 
 #### Install Client
-- [ ] 2.7 Install Supabase JS client (`npm install @supabase/supabase-js`)
-- [ ] 2.8 Install secure storage for keys (`npm install expo-secure-store`)
-- [ ] 2.9 Create `lib/supabase.ts` — initialise and export the Supabase client
+- [x] 2.7 Install Supabase JS client (`npm install @supabase/supabase-js`)
+- [x] 2.8 Install secure storage for keys (`npx expo install expo-sqlite`)
+- [x] 2.9 Create `lib/supabase.js` — initialise and export the Supabase client
 
 ---
 
 ### Phase 3 — Frontend (React Native)
 #### Navigation
-- [ ] 3.1 Install React Navigation (`@react-navigation/native`)
-- [ ] 3.2 Set up Bottom Tab Navigator (Timetable | Tickets)
-- [ ] 3.3 Set up Stack Navigator for detail and form screens
+- [x] 3.1 Install React Navigation (`@react-navigation/native`)
+- [x] 3.2 Set up Bottom Tab Navigator (Timetable | Tickets)
+- [x] 3.3 Set up Stack Navigator for detail and form screens
 
 #### Timetable Screen
-- [ ] 3.4 Build day selector tabs (Jul 30, Jul 31, Aug 1, Aug 2)
-- [ ] 3.5 Build event card component (time, title, location)
-- [ ] 3.6 Fetch events from Supabase filtered by selected date
-- [ ] 3.7 Sort events by start time
-- [ ] 3.8 Add pull-to-refresh
+- [x] 3.4 Build day selector tabs (Jul 30, Jul 31, Aug 1, Aug 2)
+- [x] 3.5 Build event card component (time, title, location)
+- [x] 3.6 Fetch events from Supabase filtered by selected date
+- [x] 3.7 Sort events by start time
+- [x] 3.8 Add pull-to-refresh
 
 #### Event Detail Screen
-- [ ] 3.9 Build detail view (title, date, time, location, notes)
-- [ ] 3.10 Add map link (opens Google Maps with the location)
-- [ ] 3.11 Show associated tickets for the event
-- [ ] 3.12 Add Edit and Delete buttons
-- [ ] 3.13 Delete event from Supabase on confirm
+- [x] 3.9 Build detail view (title, date, time, location, notes)
+- [x] 3.10 Add map link (opens Google Maps with the location)
+- [x] 3.11 Show associated tickets for the event
+- [x] 3.12 Add Edit and Delete buttons
+- [x] 3.13 Delete event from Supabase on confirm
 
 #### Add / Edit Event Form
-- [ ] 3.14 Build form (title, date picker, time pickers, location, notes)
-- [ ] 3.15 Save new event to Supabase (`insert`)
-- [ ] 3.16 Update existing event in Supabase (`update`)
+- [x] 3.14 Build form (title, date picker, time pickers, location, notes)
+- [x] 3.15 Save new event to Supabase (`insert`)
+- [x] 3.16 Update existing event in Supabase (`update`)
 
 #### Ticket Storage Screen
-- [ ] 3.17 Build ticket list view grouped by event
-- [ ] 3.18 Add upload button (pick image or PDF from device)
-- [ ] 3.19 Upload file to Supabase Storage and save record to `tickets` table
-- [ ] 3.20 Build ticket viewer (display image or open PDF)
-- [ ] 3.21 Add delete ticket functionality
+- [x] 3.17 Build ticket list view grouped by event
+- [x] 3.18 Add upload button (pick image or PDF from device)
+- [x] 3.19 Upload file to Supabase Storage and save record to `tickets` table
+- [x] 3.20 Build ticket viewer (display image or open PDF)
+- [x] 3.21 Add delete ticket functionality
 
 #### Shared Components
-- [ ] 3.22 Loading spinner component
-- [ ] 3.23 Empty state component ("No events yet")
-- [ ] 3.24 Error toast / alert component
+- [x] 3.22 Loading spinner component
+- [x] 3.23 Empty state component ("No events yet")
+- [x] 3.24 Error toast / alert component
 
 ---
 
