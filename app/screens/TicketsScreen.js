@@ -15,7 +15,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import { showError } from '../components/ErrorToast';
 
-export default function TicketsScreen() {
+export default function TicketsScreen({ navigation }) {
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ export default function TicketsScreen() {
   const fetchData = useCallback(async () => {
     try {
       const [eventsRes, ticketsRes] = await Promise.all([
-        supabase.from('events').select('*').order('date').order('start_time'),
+        supabase.from('events').select('*').eq('needs_ticket', true).order('date').order('start_time'),
         supabase.from('tickets').select('*').order('uploaded_at', { ascending: false }),
       ]);
       if (eventsRes.error) throw eventsRes.error;
@@ -39,8 +39,9 @@ export default function TicketsScreen() {
   }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const unsubscribe = navigation.addListener('focus', fetchData);
+    return unsubscribe;
+  }, [navigation, fetchData]);
 
   const ticketsForEvent = (eventId) => tickets.filter((t) => t.event_id === eventId);
 

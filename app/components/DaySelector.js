@@ -1,57 +1,67 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 
-const DAYS = [
-  { label: 'Jul 30', value: '2026-07-30' },
-  { label: 'Jul 31', value: '2026-07-31' },
-  { label: 'Aug 1', value: '2026-08-01' },
-  { label: 'Aug 2', value: '2026-08-02' },
-];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export default function DaySelector({ selected, onSelect }) {
+const H_PAD = 12;
+const GAP = 6;
+const COLS = 5;
+
+export default function DaySelector({ days, selected, onSelect }) {
+  const { width } = useWindowDimensions();
+  const tabSize = Math.floor((width - H_PAD * 2 - GAP * (COLS - 1)) / COLS);
+
+  if (!days || days.length === 0) return null;
+
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.row}
-    >
-      {DAYS.map((day) => (
-        <TouchableOpacity
-          key={day.value}
-          style={[styles.tab, selected === day.value && styles.activeTab]}
-          onPress={() => onSelect(day.value)}
-        >
-          <Text style={[styles.label, selected === day.value && styles.activeLabel]}>
-            {day.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+    <View style={styles.row}>
+      {days.map((day) => {
+        const [, month, dayNum] = day.value.split('-').map(Number);
+        const isActive = selected === day.value;
+        return (
+          <TouchableOpacity
+            key={day.value}
+            style={[styles.tab, { width: tabSize, height: tabSize }, isActive && styles.activeTab]}
+            onPress={() => onSelect(day.value)}
+          >
+            <Text style={[styles.month, isActive && styles.activeText]}>{MONTHS[month - 1]}</Text>
+            <Text style={[styles.dayNum, isActive && styles.activeText]}>{dayNum}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
+    paddingHorizontal: H_PAD,
+    paddingTop: 12,
+    paddingBottom: 12,
+    gap: GAP,
   },
   tab: {
-    paddingVertical: 8,
-    paddingHorizontal: 18,
-    borderRadius: 20,
+    borderRadius: 10,
     backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   activeTab: {
     backgroundColor: '#3b82f6',
   },
-  label: {
-    fontSize: 14,
+  month: {
+    fontSize: 11,
     fontWeight: '500',
-    color: '#475569',
+    color: '#64748b',
   },
-  activeLabel: {
+  dayNum: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginTop: 1,
+  },
+  activeText: {
     color: '#fff',
   },
 });

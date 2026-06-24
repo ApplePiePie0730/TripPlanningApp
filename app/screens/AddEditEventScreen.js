@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Switch,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
@@ -32,11 +33,12 @@ export default function AddEditEventScreen({ navigation, route }) {
   const existing = route.params?.event ?? null;
 
   const [title, setTitle] = useState(existing?.title ?? '');
-  const [date, setDate] = useState(existing?.date ? new Date(existing.date) : new Date('2026-07-30'));
+  const [date, setDate] = useState(existing?.date ? new Date(existing.date) : new Date());
   const [startTime, setStartTime] = useState(existing?.start_time ? parseTimeStr(existing.start_time) : new Date());
   const [endTime, setEndTime] = useState(existing?.end_time ? parseTimeStr(existing.end_time) : new Date());
   const [location, setLocation] = useState(existing?.location ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
+  const [needsTicket, setNeedsTicket] = useState(existing?.needs_ticket ?? false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -56,6 +58,7 @@ export default function AddEditEventScreen({ navigation, route }) {
       end_time: toTimeStr(endTime),
       location: location.trim(),
       notes: notes.trim(),
+      needs_ticket: needsTicket,
     };
 
     try {
@@ -95,8 +98,7 @@ export default function AddEditEventScreen({ navigation, route }) {
           value={date}
           mode="date"
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
-          minimumDate={new Date('2026-07-30')}
-          maximumDate={new Date('2026-08-02')}
+          minimumDate={new Date()}
           onChange={(_, d) => {
             setShowDatePicker(false);
             if (d) setDate(d);
@@ -159,6 +161,16 @@ export default function AddEditEventScreen({ navigation, route }) {
         textAlignVertical="top"
       />
 
+      <View style={styles.toggleRow}>
+        <Text style={styles.label}>Needs Ticket</Text>
+        <Switch
+          value={needsTicket}
+          onValueChange={setNeedsTicket}
+          trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
+          thumbColor="#fff"
+        />
+      </View>
+
       <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
         <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Event'}</Text>
       </TouchableOpacity>
@@ -175,6 +187,7 @@ const styles = StyleSheet.create({
   textArea: { height: 100 },
   pickerBtn: { backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', padding: 12 },
   pickerBtnText: { fontSize: 15, color: '#1e293b' },
+  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
   saveBtn: { marginTop: 28, backgroundColor: '#3b82f6', borderRadius: 10, padding: 15, alignItems: 'center' },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Text } from 'react-native';
 import { supabase } from '../lib/supabase';
 import DaySelector from '../components/DaySelector';
@@ -7,31 +7,71 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import { showError } from '../components/ErrorToast';
 
+function formatDateLabel(dateStr) {
+  const [, month, day] = dateStr.split('-').map(Number);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[month - 1]} ${day}`;
+}
+
 export default function TimetableScreen({ navigation }) {
-  const [selectedDate, setSelectedDate] = useState('2026-07-30');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [activeDates, setActiveDates] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  // Ref so refreshDates can always read the latest selectedDate without stale closures
+  const selectedDateRef = useRef(null);
 
-  const fetchEvents = useCallback(
-    async (date) => {
-      try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .eq('date', date)
-          .order('start_time');
-        if (error) throw error;
-        setEvents(data);
-      } catch (err) {
-        showError(err.message);
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+  const fetchEvents = useCallback(async (date) => {
+    if (!date) {
+      setEvents([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('date', date)
+        .order('start_time');
+      if (error) throw error;
+      setEvents(data);
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  // Fetches all distinct event dates, keeps current selection if still valid,
+  // otherwise falls back to the first available date.
+  const refreshDates = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('date')
+        .order('date');
+      if (error) throw error;
+      const unique = [...new Set(data.map((r) => r.date))];
+      const days = unique.slice(-5).map((d) => ({ label: formatDateLabel(d), value: d }));
+      setActiveDates(days);
+
+      const current = selectedDateRef.current;
+      const stillValid = days.some((d) => d.value === current);
+      const next = stillValid ? current : (days.length > 0 ? days[0].value : null);
+
+      if (next !== current) {
+        setSelectedDate(next);
+        selectedDateRef.current = next;
       }
-    },
-    []
-  );
+      return next;
+    } catch (err) {
+      showError(err.message);
+      return selectedDateRef.current;
+    }
+  }, []);
 
   useEffect(() => {
     navigation.setOptions({
@@ -43,44 +83,51 @@ export default function TimetableScreen({ navigation }) {
     });
   }, [navigation]);
 
+  // Focus fires on initial mount too, so this handles both initial load and
+  // returning from AddEditEvent / EventDetail.
   useEffect(() => {
-    setLoading(true);
-    fetchEvents(selectedDate);
-  }, [selectedDate, fetchEvents]);
-
-  // Re-fetch when returning from add/edit/delete
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      fetchEvents(selectedDate);
+    const unsubscribe = navigation.addListener('focus', async () => {
+      setLoading(true);
+      const nextDate = await refreshDates();
+      await fetchEvents(nextDate);
     });
     return unsubscribe;
-  }, [navigation, selectedDate, fetchEvents]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchEvents(selectedDate);
-  };
+  }, [navigation, refreshDates, fetchEvents]);
 
   const handleDaySelect = (date) => {
     setSelectedDate(date);
+    selectedDateRef.current = date;
     setLoading(true);
+    fetchEvents(date);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    const nextDate = await refreshDates();
+    await fetchEvents(nextDate);
   };
 
   if (loading && !refreshing) return <LoadingSpinner />;
 
   return (
     <View style={styles.container}>
-      <DaySelector selected={selectedDate} onSelect={handleDaySelect} />
       <FlatList
         data={events}
         keyExtractor={(item) => String(item.id)}
+        ListHeaderComponent={
+          <DaySelector days={activeDates} selected={selectedDate} onSelect={handleDaySelect} />
+        }
         renderItem={({ item }) => (
           <EventCard
             event={item}
             onPress={() => navigation.navigate('EventDetail', { event: item })}
           />
         )}
-        ListEmptyComponent={<EmptyState message="No events for this day" />}
+        ListEmptyComponent={
+          <EmptyState
+            message={activeDates.length === 0 ? 'Add an event to get started' : 'No events for this day'}
+          />
+        }
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={[styles.list, events.length === 0 && styles.emptyList]}
       />
@@ -90,7 +137,7 @@ export default function TimetableScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  list: { paddingTop: 8, paddingBottom: 20 },
+  list: { paddingTop: 4, paddingBottom: 20 },
   emptyList: { flex: 1 },
   addBtn: { color: '#3b82f6', fontSize: 16, fontWeight: '600', marginRight: 4 },
 });
