@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import { File } from 'expo-file-system';
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -56,12 +57,11 @@ export default function TicketsScreen() {
       const ext = file.name.split('.').pop();
       const storagePath = `${eventId}/${Date.now()}.${ext}`;
 
-      const response = await fetch(file.uri);
-      const blob = await response.blob();
+      const bytes = await new File(file.uri).bytes();
 
       const { error: uploadError } = await supabase.storage
         .from('tickets')
-        .upload(storagePath, blob, { contentType: file.mimeType });
+        .upload(storagePath, bytes, { contentType: file.mimeType });
       if (uploadError) throw uploadError;
 
       const { error: insertError } = await supabase.from('tickets').insert({

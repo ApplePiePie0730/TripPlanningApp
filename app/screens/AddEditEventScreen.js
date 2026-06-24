@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -71,7 +72,11 @@ export default function AddEditEventScreen({ navigation, route }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.label}>Title *</Text>
       <TextInput
         style={styles.input}
@@ -158,6 +163,7 @@ export default function AddEditEventScreen({ navigation, route }) {
         <Text style={styles.saveBtnText}>{saving ? 'Saving…' : 'Save Event'}</Text>
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
