@@ -55,12 +55,13 @@ export default function TimetableScreen({ navigation }) {
         .order('date');
       if (error) throw error;
       const unique = [...new Set(data.map((r) => r.date))];
-      const days = unique.slice(-5).map((d) => ({ label: formatDateLabel(d), value: d }));
+      const days = unique.slice(0, 5).map((d) => ({ label: formatDateLabel(d), value: d }));
       setActiveDates(days);
 
       const current = selectedDateRef.current;
-      const stillValid = days.some((d) => d.value === current);
-      const next = stillValid ? current : (days.length > 0 ? days[0].value : null);
+      // Keep any selected date (including custom picker dates outside the 5 squares);
+      // only fall back to the first available day when nothing is selected yet.
+      const next = current ?? (days.length > 0 ? days[0].value : null);
 
       if (next !== current) {
         setSelectedDate(next);

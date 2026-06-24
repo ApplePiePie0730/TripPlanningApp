@@ -6,7 +6,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import * as Linking from 'expo-linking';
@@ -15,11 +18,27 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import { showError } from '../components/ErrorToast';
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function toLocalDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatDateLabel(dateStr) {
+  const [, month, day] = dateStr.split('-').map(Number);
+  return `${MONTHS[month - 1]} ${day}`;
+}
+
 export default function TicketsScreen({ navigation }) {
   const [events, setEvents] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(null); // event id being uploaded to
+  const [uploading, setUploading] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [showPicker, setShowPicker] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -42,6 +61,10 @@ export default function TicketsScreen({ navigation }) {
     const unsubscribe = navigation.addListener('focus', fetchData);
     return unsubscribe;
   }, [navigation, fetchData]);
+
+  const filteredEvents = selectedDate
+    ? events.filter((e) => e.date === selectedDate)
+    : events;
 
   const ticketsForEvent = (eventId) => tickets.filter((t) => t.event_id === eventId);
 
@@ -113,6 +136,39 @@ export default function TicketsScreen({ navigation }) {
     ]);
   };
 
+  const pickerValue = selectedDate
+    ? (() => { const [y, mo, d] = selectedDate.split('-').map(Number); return new Date(y, mo - 1, d); })()
+    : new Date();
+
+  const dateFilterBar = (
+    <View style={styles.filterBar}>
+      {selectedDate ? (
+        <TouchableOpacity style={styles.activeDateChip} onPress={() => setSelectedDate(null)}>
+          <Ionicons name="calendar" size={14} color="#3b82f6" style={{ marginRight: 4 }} />
+          <Text style={styles.activeDateText}>{formatDateLabel(selectedDate)}</Text>
+          <Ionicons name="close-circle" size={16} color="#3b82f6" style={{ marginLeft: 4 }} />
+        </TouchableOpacity>
+      ) : (
+        <Text style={styles.allDatesText}>All dates</Text>
+      )}
+      <TouchableOpacity style={styles.calBtn} onPress={() => setShowPicker(true)}>
+        <Ionicons name="calendar-outline" size={18} color="#3b82f6" />
+        <Text style={styles.calBtnText}>Pick date</Text>
+      </TouchableOpacity>
+      {showPicker && (
+        <DateTimePicker
+          value={pickerValue}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'inline' : 'default'}
+          onChange={(_, d) => {
+            setShowPicker(false);
+            if (d) setSelectedDate(toLocalDateStr(d));
+          }}
+        />
+      )}
+    </View>
+  );
+
   if (loading) return <LoadingSpinner />;
 
   if (events.length === 0) {
@@ -121,9 +177,13 @@ export default function TicketsScreen({ navigation }) {
 
   return (
     <FlatList
-      data={events}
+      data={filteredEvents}
       keyExtractor={(item) => String(item.id)}
-      contentContainerStyle={styles.list}
+      ListHeaderComponent={dateFilterBar}
+      contentContainerStyle={[styles.list, filteredEvents.length === 0 && styles.emptyList]}
+      ListEmptyComponent={
+        <EmptyState message={selectedDate ? `No ticket events on ${formatDateLabel(selectedDate)}` : 'No ticket events found'} />
+      }
       renderItem={({ item: event }) => {
         const eventTickets = ticketsForEvent(event.id);
         const isUploading = uploading === event.id;
@@ -170,6 +230,34 @@ export default function TicketsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   list: { padding: 12, paddingBottom: 40 },
+  emptyList: { flex: 1 },
+  filterBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
+  allDatesText: { fontSize: 14, color: '#94a3b8', fontWeight: '500' },
+  activeDateChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eff6ff',
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  activeDateText: { fontSize: 14, color: '#3b82f6', fontWeight: '600' },
+  calBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#eff6ff',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    gap: 4,
+  },
+  calBtnText: { fontSize: 13, color: '#3b82f6', fontWeight: '600' },
   group: { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 3, elevation: 2 },
   groupHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   groupTitleWrap: { flex: 1 },
