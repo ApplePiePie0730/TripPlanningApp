@@ -34,7 +34,7 @@ Your Phone (React Native app)  →  Supabase (always online, hosted by them)
 - [x] 1.2 Set up project folder structure
 - [x] 1.3 Configure ESLint + Prettier
 - [ ] 1.4 Set up Git repository and `.gitignore`
-- [ ] 1.5 Create `.env` file for Supabase URL and anon key
+- [x] 1.5 Create `.env` file for Supabase URL and anon key
 
 ---
 
